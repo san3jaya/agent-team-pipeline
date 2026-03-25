@@ -17,6 +17,9 @@ The result: higher code quality, lower token costs, and a predictable workflow t
 | **Inspector** | Code quality review + OWASP security audit | Mid (Sonnet) | Medium |
 | **Shipper** | Commits, pushes, analyzes CI pipelines | Light (GPT-5 Mini) | Low |
 
+> [!NOTE]  
+> We can switch the LLM model to any desired option, including its reasoning capabilities.
+
 ## The Pipeline
 
 Every task flows through a strict sequential pipeline. The Captain never skips ahead -- each step must complete before the next begins.

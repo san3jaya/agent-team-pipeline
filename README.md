@@ -2,7 +2,7 @@
 
 ## What Is This?
 
-A **6-agent orchestration system** for [OpenCode](https://opencode.ai) that replaces the default single-agent workflow with a structured, sequential pipeline. Instead of one AI agent doing everything (planning, coding, testing, reviewing, committing), a **Team Lead agent** delegates to 5 specialized subagents -- each with its own model tier, permissions, and focused prompt.
+A **6-agent orchestration system** for [OpenCode](https://opencode.ai) that replaces the default single-agent workflow with a structured, sequential pipeline. Instead of one AI agent doing everything (planning, coding, testing, reviewing, committing), a **Captain agent** delegates to 5 specialized subagents -- each with its own model tier, permissions, and focused prompt.
 
 The result: higher code quality, lower token costs, and a predictable workflow that mirrors how a real engineering team operates.
 
@@ -10,28 +10,28 @@ The result: higher code quality, lower token costs, and a predictable workflow t
 
 | Agent | Role | Model Tier | Cost |
 |-------|------|-----------|------|
-| **Team Lead** | Orchestrator -- classifies tasks, delegates, compresses context | Full (Opus) | High |
-| **Planner** | Explores codebase, analyzes requirements, designs architecture | Full (Opus) | High |
-| **Implementer** | Writes/edits code, updates documentation | Full (Opus) | High |
-| **Builder** | Formats code, compiles assets, runs tests, fixes test files | Mid (Sonnet) | Medium |
-| **Reviewer** | Code quality review + OWASP security audit | Mid (Sonnet) | Medium |
-| **Git** | Commits, pushes, analyzes CI pipelines | Light (GPT-5 Mini) | Low |
+| **Captain** | Orchestrator -- classifies tasks, delegates, compresses context | Full (Opus) | High |
+| **Architect** | Explores codebase, analyzes requirements, designs architecture | Full (Opus) | High |
+| **Engineer** | Writes/edits code, updates documentation | Full (Opus) | High |
+| **Forge** | Formats code, compiles assets, runs tests, fixes test files | Mid (Sonnet) | Medium |
+| **Inspector** | Code quality review + OWASP security audit | Mid (Sonnet) | Medium |
+| **Shipper** | Commits, pushes, analyzes CI pipelines | Light (GPT-5 Mini) | Low |
 
 ## The Pipeline
 
-Every task flows through a strict sequential pipeline. The Team Lead never skips ahead -- each step must complete before the next begins.
+Every task flows through a strict sequential pipeline. The Captain never skips ahead -- each step must complete before the next begins.
 
 ```
-1. PLAN+EXPLORE  -> Planner        Understand the problem, explore code, design solution
-2. IMPLEMENT     -> Implementer    Write the code following the plan
-3. BUILD+TEST    -> Builder        Format, build, run tests, fix test files
-4. REVIEW        -> Reviewer       Quality + security audit
-5. GIT           -> Git Agent      Commit, push, check CI
+1. PLAN+EXPLORE  -> Architect       Understand the problem, explore code, design solution
+2. IMPLEMENT     -> Engineer        Write the code following the plan
+3. BUILD+TEST    -> Forge           Format, build, run tests, fix test files
+4. REVIEW        -> Inspector       Quality + security audit
+5. GIT           -> Shipper         Commit, push, check CI
 ```
 
 Tasks are classified into 4 tiers (trivial, simple, standard, complex), and the pipeline adapts -- trivial tasks skip planning entirely, simple tasks skip review, etc.
 
-When tests fail or the reviewer finds critical issues, a **remediation loop** kicks in: failures route back to the Implementer for fixes, then re-run validation. The Team Lead never fixes code itself -- it purely orchestrates.
+When tests fail or the reviewer finds critical issues, a **remediation loop** kicks in: failures route back to the Engineer for fixes, then re-run validation. The Captain never fixes code itself -- it purely orchestrates.
 
 ### Remediation Flow
 
@@ -44,7 +44,7 @@ When tests fail or the reviewer finds critical issues, a **remediation loop** ki
            +------+------+
            |             |
            v             v
-       REVIEW      IMPLEMENTER (fix)
+        REVIEW      ENGINEER (fix)
            |             |
            |             v
            |       BUILD + TEST (re-verify)
@@ -59,41 +59,41 @@ We applied **8 strategies** across the system, consolidated from an initial 12-a
 
 ### 1. Agent Consolidation (12 -> 8 -> 6 agents)
 
-Merged 6 agents into others: Architect -> Planner, Formatter -> Builder, Security -> Reviewer, Docs -> Implementer, Explorer -> Planner, Tester -> Builder. Fewer agents = fewer invocations = fewer tokens.
+Merged 6 agents into others: Architect stayed as Architect, Formatter -> Forge, Security -> Inspector, Docs -> Engineer, Explorer -> Architect, Tester -> Forge. Fewer agents = fewer invocations = fewer tokens.
 
 ### 2. Model Tiering
 
-Not every task needs the most expensive model. The Builder and Reviewer use Sonnet (mid-tier), Git uses GPT-5 Mini (light-tier). Only the Planner, Implementer, and Team Lead use Opus. This alone cuts cost significantly -- validation and coordination tasks don't need frontier reasoning.
+Not every task needs the most expensive model. The Forge and Inspector use Sonnet (mid-tier), Shipper uses GPT-5 Mini (light-tier). Only the Architect, Engineer, and Captain use Opus. This alone cuts cost significantly -- validation and coordination tasks don't need frontier reasoning.
 
 ```
-Full  (Opus)       -> Team Lead, Planner, Implementer   [reasoning-heavy]
-Mid   (Sonnet)     -> Builder, Reviewer                 [structured tasks]
-Light (GPT-5 Mini) -> Git                               [mechanical tasks]
+Full  (Opus)       -> Captain, Architect, Engineer       [reasoning-heavy]
+Mid   (Sonnet)     -> Forge, Inspector                   [structured tasks]
+Light (GPT-5 Mini) -> Shipper                            [mechanical tasks]
 ```
 
 ### 3. Context Compression
 
-After each subagent returns, the Team Lead compresses output to **2-4 bullet points** before passing to the next agent. This prevents "context snowball" -- where each agent gets the full verbose output of every previous agent, ballooning token usage across the pipeline.
+After each subagent returns, the Captain compresses output to **2-4 bullet points** before passing to the next agent. This prevents "context snowball" -- where each agent gets the full verbose output of every previous agent, ballooning token usage across the pipeline.
 
 **Example:**
-- Planner returns 200 lines of analysis -> compressed to: file paths, 3 implementation steps, 1 risk note
-- Builder returns full test output -> compressed to: "14 tests passed, 0 failed"
+- Architect returns 200 lines of analysis -> compressed to: file paths, 3 implementation steps, 1 risk note
+- Forge returns full test output -> compressed to: "14 tests passed, 0 failed"
 
 ### 4. Conditional Exploration Depth
 
-The Planner does a lightweight 3-step exploration for simple tasks, but a full 7-step deep dive for standard/complex tasks. No point spending tokens exploring the entire codebase for a bug fix.
+The Architect does a lightweight 3-step exploration for simple tasks, but a full 7-step deep dive for standard/complex tasks. No point spending tokens exploring the entire codebase for a bug fix.
 
 ### 5. Stricter Output Caps
 
 | Agent | On Success | On Failure |
 |-------|-----------|-----------|
-| Builder | Test counts + status only | First 10 lines of errors |
-| Reviewer | Critical/high = full detail | Medium = finding + fix only |
-| Reviewer | Low/suggestions = max 15 words each | Empty sections omitted |
+| Forge | Test counts + status only | First 10 lines of errors |
+| Inspector | Critical/high = full detail | Medium = finding + fix only |
+| Inspector | Low/suggestions = max 15 words each | Empty sections omitted |
 
 ### 6. Trivial Self-Handle
 
-For truly trivial edits (typo, config change, rename), the Team Lead makes the edit directly instead of spinning up the full pipeline -- but still always invokes the Builder for testing.
+For truly trivial edits (typo, config change, rename), the Captain makes the edit directly instead of spinning up the full pipeline -- but still always invokes the Forge for testing.
 
 ### 7. Conditional Session Persistence
 
@@ -105,7 +105,7 @@ Each task classification has a hard cap on subagent invocations (including retri
 
 | Classification | Max Invocations | Typical Usage |
 |---------------|----------------|---------------|
-| Trivial | 3 | builder + git + 1 retry |
+| Trivial | 3 | forge + shipper + 1 retry |
 | Simple | 6 | 4 steps + 2 retries |
 | Standard | 8 | 5 steps + 3 retries |
 | Complex | 12 | 5 steps + remediation loops |
@@ -159,23 +159,23 @@ All agent prompts use universal concepts (manifest files, build tools, test runn
 
 ### Independent Review
 
-We deliberately kept the Reviewer as a separate agent rather than merging it into the Implementer. Self-review is a known anti-pattern -- an independent reviewer catches what the author misses, even when the "author" is an AI.
+We deliberately kept the Inspector as a separate agent rather than merging it into the Engineer. Self-review is a known anti-pattern -- an independent reviewer catches what the author misses, even when the "author" is an AI.
 
 ### Remediation Loops with Delegation Discipline
 
-When tests fail or the reviewer finds critical issues, fixes route through the Implementer (never the Team Lead). The Team Lead has three layers of reinforcement to prevent it from "helpfully" fixing code itself:
+When tests fail or the reviewer finds critical issues, fixes route through the Engineer (never the Captain). The Captain has three layers of reinforcement to prevent it from "helpfully" fixing code itself:
 
 1. Opening instruction: "NEVER attempt to resolve it yourself"
 2. Technical Failure Handling: "you are an orchestrator, not a worker"
-3. Remediation Loop: "NEVER fix code yourself -- always delegate to @team-implementer"
+3. Remediation Loop: "NEVER fix code yourself -- always delegate to @team-engineer"
 
 ### Hidden Subagents
 
-All 5 subagents are hidden from the `@` autocomplete menu. They only appear when invoked by the Team Lead via the Task tool. This keeps the UI clean and prevents accidental direct invocation.
+All 5 subagents are hidden from the `@` autocomplete menu. They only appear when invoked by the Captain via the Task tool. This keeps the UI clean and prevents accidental direct invocation.
 
 ### Session Persistence
 
-For longer tasks, the Team Lead maintains a `.opencode/resume.md` checkpoint file. If a session is interrupted, the user can say "resume" and pick up exactly where they left off -- no re-exploring the codebase or re-deriving the plan.
+For longer tasks, the Captain maintains a `.opencode/resume.md` checkpoint file. If a session is interrupted, the user can say "resume" and pick up exactly where they left off -- no re-exploring the codebase or re-deriving the plan.
 
 ## Architecture Overview
 
@@ -184,8 +184,8 @@ User Request
      |
      v
 +--------------------+
-|    TEAM LEAD       |  Classifies task, orchestrates pipeline,
-|    (Opus)          |  compresses context between steps
+|     CAPTAIN        |  Classifies task, orchestrates pipeline,
+|     (Opus)         |  compresses context between steps
 +----+----------+----+
      |          |
      |  Trivial |  Simple / Standard / Complex
@@ -193,32 +193,32 @@ User Request
      |  handle) |
      |          v
      |  +---------------+
-     |  |   PLANNER     |  Explore codebase, analyze requirements,
+     |  |   ARCHITECT   |  Explore codebase, analyze requirements,
      |  |   (Opus)      |  design architecture (conditional depth)
      |  +-------+-------+
      |          |
      |          v
      |  +---------------+
-     |  | IMPLEMENTER   |  Write/edit code, update docs
-     |  | (Opus)        |  <-- also handles remediation fixes
+     |  |   ENGINEER    |  Write/edit code, update docs
+     |  |   (Opus)      |  <-- also handles remediation fixes
      |  +-------+-------+
      |          |
      +--------->|
                 v
         +---------------+
-        |   BUILDER     |  Format, build, test, fix test files
-        |   (Sonnet)    |  <-- loops back to implementer on failure
+        |     FORGE     |  Format, build, test, fix test files
+        |   (Sonnet)    |  <-- loops back to engineer on failure
         +-------+-------+
                 |
                 v
         +---------------+
-        |   REVIEWER    |  Code quality + OWASP security audit
+        |   INSPECTOR   |  Code quality + OWASP security audit
         |   (Sonnet)    |  <-- critical/high findings loop back
         +-------+-------+
                 |
                 v
         +---------------+
-        |     GIT       |  Commit, push, CI analysis
+        |    SHIPPER    |  Commit, push, CI analysis
         |  (GPT-5 Mini) |
         +---------------+
                 |
@@ -245,56 +245,56 @@ Place all 6 agent files in `~/.config/opencode/agents/`:
 
 ```
 ~/.config/opencode/agents/
-├── team-lead.md          # Primary orchestrator
-├── team-planner.md       # Plan + explore + architecture
-├── team-implementer.md   # Write/edit code + docs
-├── team-builder.md       # Format + build + test
-├── team-reviewer.md      # Quality + security review
-└── team-git.md           # Commit, push, CI analysis
+├── team-captain.md       # Primary orchestrator
+├── team-architect.md     # Plan + explore + architecture
+├── team-engineer.md      # Write/edit code + docs
+├── team-forge.md         # Format + build + test
+├── team-inspector.md     # Quality + security review
+└── team-shipper.md       # Commit, push, CI analysis
 ```
 
 These are **global agents** -- they work across all your projects, not just one.
 
-**Step 2: Set the Team Lead as your default agent.**
+**Step 2: Set the Captain as your default agent.**
 
 Edit (or create) `~/.config/opencode/opencode.json`:
 
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "default_agent": "team-lead"
+  "default_agent": "team-captain"
 }
 ```
 
-The `default_agent` setting makes every new conversation start with the Team Lead automatically. Without this, you'd need to manually select `@team-lead` each time.
+The `default_agent` setting makes every new conversation start with the Captain automatically. Without this, you'd need to manually select `@team-captain` each time.
 
 **Step 3 (optional): Adjust model assignments.**
 
 Each agent file has a `model` field in its frontmatter. If you don't have access to the exact models used, edit the agent files to match your available models:
 
 ```yaml
-# In team-builder.md and team-reviewer.md (mid-tier)
+# In team-forge.md and team-inspector.md (mid-tier)
 model: github-copilot/claude-sonnet-4.6
 
-# In team-git.md (light-tier)
+# In team-shipper.md (light-tier)
 model: github-copilot/gpt-5-mini
 ```
 
-Agents without a `model` field (Team Lead, Planner, Implementer) inherit the globally configured model.
+Agents without a `model` field (Captain, Architect, Engineer) inherit the globally configured model.
 
 ### Usage
 
-Once installed, just use OpenCode normally. The Team Lead handles everything:
+Once installed, just use OpenCode normally. The Captain handles everything:
 
 ```
 > Add a search feature to the users page
 
-# Team Lead classifies the task (standard), then:
-# 1. Invokes Planner to explore codebase and design the approach
-# 2. Invokes Implementer to write the code
-# 3. Invokes Builder to format, build, and test
-# 4. Invokes Reviewer for quality + security audit
-# 5. Invokes Git to commit (if requested)
+# Captain classifies the task (standard), then:
+# 1. Invokes Architect to explore codebase and design the approach
+# 2. Invokes Engineer to write the code
+# 3. Invokes Forge to format, build, and test
+# 4. Invokes Inspector for quality + security audit
+# 5. Invokes Shipper to commit (if requested)
 # -> Final report with efficiency summary
 ```
 
@@ -304,7 +304,7 @@ Once installed, just use OpenCode normally. The Team Lead handles everything:
 > Add a search feature to the users page and commit it
 ```
 
-The Team Lead will include the Git step and pass commit instructions to the Git agent.
+The Captain will include the Git step and pass commit instructions to the Shipper.
 
 **Resuming interrupted work (standard/complex tasks only):**
 
@@ -312,7 +312,7 @@ The Team Lead will include the Git step and pass commit instructions to the Git 
 > resume
 ```
 
-The Team Lead checks for `.opencode/resume.md` in the project root and offers to continue from where it left off.
+The Captain checks for `.opencode/resume.md` in the project root and offers to continue from where it left off.
 
 **Trivial edits are fast:**
 
@@ -320,18 +320,18 @@ The Team Lead checks for `.opencode/resume.md` in the project root and offers to
 > Fix the typo in the header on the dashboard page
 ```
 
-The Team Lead handles the edit directly (no Planner or Implementer needed), but still invokes the Builder to run tests.
+The Captain handles the edit directly (no Architect or Engineer needed), but still invokes the Forge to run tests.
 
 ### How It Behaves
 
-- **You talk to the Team Lead only.** The 5 subagents are hidden from the `@` autocomplete -- they're invoked automatically.
-- **The Team Lead will ask clarifying questions** if your request is vague or has trade-offs. Max 3 questions, framed as choices.
-- **If something fails**, the Team Lead retries or routes to the Implementer for fixes. It will never silently swallow errors.
+- **You talk to the Captain only.** The 5 subagents are hidden from the `@` autocomplete -- they're invoked automatically.
+- **The Captain will ask clarifying questions** if your request is vague or has trade-offs. Max 3 questions, framed as choices.
+- **If something fails**, the Captain retries or routes to the Engineer for fixes. It will never silently swallow errors.
 - **The final report** tells you exactly what happened: steps run, steps skipped, issues found, invocation count, and efficiency breakdown.
 
 ### Customization
 
-**Adjust pipeline budgets** -- Edit the Pipeline Budget section in `team-lead.md` if the default caps (trivial: 3, simple: 6, standard: 8, complex: 12) are too tight or too loose for your workflow.
+**Adjust pipeline budgets** -- Edit the Pipeline Budget section in `team-captain.md` if the default caps (trivial: 3, simple: 6, standard: 8, complex: 12) are too tight or too loose for your workflow.
 
 **Add project-specific skills** -- Place skill files in your project's `.opencode/agents/skills/` directory. The agents will pick them up automatically for technology-specific guidance (e.g., Laravel, React, Rust conventions).
 

@@ -36,21 +36,19 @@ When tests fail or the reviewer finds critical issues, a **remediation loop** ki
 ### Remediation Flow
 
 ```
-         +------------------+
-         |   BUILD + TEST   |
-         +--------+---------+
-                  |
-            PASS? |  FAIL?
-           +------+------+
-           |             |
-           v             v
-        REVIEW      ENGINEER (fix)
-           |             |
-           |             v
-           |       BUILD + TEST (re-verify)
-           |             |
-           v             v
-          GIT        (max 2 cycles)
+flowchart TD
+    A[BUILD + TEST] --> B{PASS?}
+
+    B -- Yes --> C[REVIEW]
+    B -- No --> D[ENGINEER (fix)]
+
+    D --> E[BUILD + TEST (re-verify)]
+    E --> F{PASS again?}
+
+    F -- Yes --> C
+    F -- No --> G[(Max 2 cycles)]
+
+    C --> H[GIT]
 ```
 
 ## How We Reduced Token/Cost Usage
@@ -180,50 +178,27 @@ For longer tasks, the Captain maintains a `.opencode/resume.md` checkpoint file.
 ## Architecture Overview
 
 ```
-User Request
-     |
-     v
-+--------------------+
-|     CAPTAIN        |  Classifies task, orchestrates pipeline,
-|     (Opus)         |  compresses context between steps
-+----+----------+----+
-     |          |
-     |  Trivial |  Simple / Standard / Complex
-     |  (self-  |
-     |  handle) |
-     |          v
-     |  +---------------+
-     |  |   ARCHITECT   |  Explore codebase, analyze requirements,
-     |  |   (Opus)      |  design architecture (conditional depth)
-     |  +-------+-------+
-     |          |
-     |          v
-     |  +---------------+
-     |  |   ENGINEER    |  Write/edit code, update docs
-     |  |   (Opus)      |  <-- also handles remediation fixes
-     |  +-------+-------+
-     |          |
-     +--------->|
-                v
-        +---------------+
-        |     FORGE     |  Format, build, test, fix test files
-        |   (Sonnet)    |  <-- loops back to engineer on failure
-        +-------+-------+
-                |
-                v
-        +---------------+
-        |   INSPECTOR   |  Code quality + OWASP security audit
-        |   (Sonnet)    |  <-- critical/high findings loop back
-        +-------+-------+
-                |
-                v
-        +---------------+
-        |    SHIPPER    |  Commit, push, CI analysis
-        |  (GPT-5 Mini) |
-        +---------------+
-                |
-                v
-        Final Report + Efficiency Summary
+flowchart TD
+    A[User Request] --> B[CAPTAIN (Opus)]
+
+    B --> C{Task Type}
+
+    C -- Trivial --> F[ENGINEER (Opus)]
+
+    C -- Simple / Standard / Complex --> D[ARCHITECT (Opus)]
+    D --> F[ENGINEER (Opus)]
+
+    F --> G[FORGE (Sonnet)]
+
+    G --> H{Tests Pass?}
+    H -- No --> F
+    H -- Yes --> I[INSPECTOR (Sonnet)]
+
+    I --> J{Critical Issues?}
+    J -- Yes --> F
+    J -- No --> K[SHIPPER (GPT-5 Mini)]
+
+    K --> L[Final Report + Efficiency Summary]
 ```
 
 ## How to Use

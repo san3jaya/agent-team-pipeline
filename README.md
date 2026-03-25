@@ -175,24 +175,24 @@ For longer tasks, the Captain maintains a `.opencode/resume.md` checkpoint file.
 
 ```mermaid
 flowchart TD
-    A[User Request] --> B[CAPTAIN (Opus)]
+    A[User Request] --> B["CAPTAIN (Opus)"]
 
     B --> C{Task Type}
 
-    C -- Trivial --> F[ENGINEER (Opus)]
+    C -- Yes --> F["ENGINEER (Opus)"]
 
-    C -- Simple / Standard / Complex --> D[ARCHITECT (Opus)]
-    D --> F[ENGINEER (Opus)]
+    C -- No --> D["ARCHITECT (Opus)"]
+    D --> F["ENGINEER (Opus)"]
 
-    F --> G[FORGE (Sonnet)]
+    F --> G["FORGE (Sonnet)"]
 
     G --> H{Tests Pass?}
-    H -- No --> F
-    H -- Yes --> I[INSPECTOR (Sonnet)]
+    H -- Yes --> F
+    H -- No --> I["INSPECTOR (Sonnet)"]
 
     I --> J{Critical Issues?}
     J -- Yes --> F
-    J -- No --> K[SHIPPER (GPT-5 Mini)]
+    J -- No --> K["SHIPPER (GPT-5 Mini)"]
 
     K --> L[Final Report + Efficiency Summary]
 ```

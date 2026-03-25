@@ -35,7 +35,7 @@ When tests fail or the reviewer finds critical issues, a **remediation loop** ki
 
 ### Remediation Flow
 
-```
+```mermaid
 flowchart TD
     A[BUILD + TEST] --> B{PASS?}
 
@@ -177,7 +177,7 @@ For longer tasks, the Captain maintains a `.opencode/resume.md` checkpoint file.
 
 ## Architecture Overview
 
-```
+```mermaid
 flowchart TD
     A[User Request] --> B[CAPTAIN (Opus)]
 

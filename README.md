@@ -226,6 +226,117 @@ User Request
         Final Report + Efficiency Summary
 ```
 
+## How to Use
+
+### Prerequisites
+
+- [OpenCode](https://opencode.ai) installed and configured with at least one provider
+- Access to the models you want to use (Opus, Sonnet, GPT-5 Mini) or adjust model assignments in the agent files to match your available models
+
+### Installation
+
+**Step 1: Copy the agent files to your global OpenCode config directory.**
+
+```bash
+mkdir -p ~/.config/opencode/agents
+```
+
+Place all 6 agent files in `~/.config/opencode/agents/`:
+
+```
+~/.config/opencode/agents/
+├── team-lead.md          # Primary orchestrator
+├── team-planner.md       # Plan + explore + architecture
+├── team-implementer.md   # Write/edit code + docs
+├── team-builder.md       # Format + build + test
+├── team-reviewer.md      # Quality + security review
+└── team-git.md           # Commit, push, CI analysis
+```
+
+These are **global agents** -- they work across all your projects, not just one.
+
+**Step 2: Set the Team Lead as your default agent.**
+
+Edit (or create) `~/.config/opencode/opencode.json`:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "team-lead"
+}
+```
+
+The `default_agent` setting makes every new conversation start with the Team Lead automatically. Without this, you'd need to manually select `@team-lead` each time.
+
+**Step 3 (optional): Adjust model assignments.**
+
+Each agent file has a `model` field in its frontmatter. If you don't have access to the exact models used, edit the agent files to match your available models:
+
+```yaml
+# In team-builder.md and team-reviewer.md (mid-tier)
+model: github-copilot/claude-sonnet-4.6
+
+# In team-git.md (light-tier)
+model: github-copilot/gpt-5-mini
+```
+
+Agents without a `model` field (Team Lead, Planner, Implementer) inherit the globally configured model.
+
+### Usage
+
+Once installed, just use OpenCode normally. The Team Lead handles everything:
+
+```
+> Add a search feature to the users page
+
+# Team Lead classifies the task (standard), then:
+# 1. Invokes Planner to explore codebase and design the approach
+# 2. Invokes Implementer to write the code
+# 3. Invokes Builder to format, build, and test
+# 4. Invokes Reviewer for quality + security audit
+# 5. Invokes Git to commit (if requested)
+# -> Final report with efficiency summary
+```
+
+**Requesting a commit:**
+
+```
+> Add a search feature to the users page and commit it
+```
+
+The Team Lead will include the Git step and pass commit instructions to the Git agent.
+
+**Resuming interrupted work (standard/complex tasks only):**
+
+```
+> resume
+```
+
+The Team Lead checks for `.opencode/resume.md` in the project root and offers to continue from where it left off.
+
+**Trivial edits are fast:**
+
+```
+> Fix the typo in the header on the dashboard page
+```
+
+The Team Lead handles the edit directly (no Planner or Implementer needed), but still invokes the Builder to run tests.
+
+### How It Behaves
+
+- **You talk to the Team Lead only.** The 5 subagents are hidden from the `@` autocomplete -- they're invoked automatically.
+- **The Team Lead will ask clarifying questions** if your request is vague or has trade-offs. Max 3 questions, framed as choices.
+- **If something fails**, the Team Lead retries or routes to the Implementer for fixes. It will never silently swallow errors.
+- **The final report** tells you exactly what happened: steps run, steps skipped, issues found, invocation count, and efficiency breakdown.
+
+### Customization
+
+**Adjust pipeline budgets** -- Edit the Pipeline Budget section in `team-lead.md` if the default caps (trivial: 3, simple: 6, standard: 8, complex: 12) are too tight or too loose for your workflow.
+
+**Add project-specific skills** -- Place skill files in your project's `.opencode/agents/skills/` directory. The agents will pick them up automatically for technology-specific guidance (e.g., Laravel, React, Rust conventions).
+
+**Change model tiers** -- Swap models in agent frontmatter to match your budget. For example, use Sonnet everywhere for lower cost, or Opus everywhere for maximum quality.
+
 ## Results
 
 The combination of these strategies means:

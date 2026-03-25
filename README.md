@@ -38,16 +38,12 @@ When tests fail or the reviewer finds critical issues, a **remediation loop** ki
 ```mermaid
 flowchart TD
     A[BUILD + TEST] --> B{PASS?}
-
     B -- Yes --> C[REVIEW]
-    B -- No --> D[ENGINEER (fix)]
-
-    D --> E[BUILD + TEST (re-verify)]
+    B -- No --> D[ENGINEER fix]
+    D --> E[BUILD + TEST re-verify]
     E --> F{PASS again?}
-
     F -- Yes --> C
     F -- No --> G[(Max 2 cycles)]
-
     C --> H[GIT]
 ```
 

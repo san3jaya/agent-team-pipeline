@@ -6,6 +6,98 @@ A **6-agent orchestration system** for [OpenCode](https://opencode.ai) that repl
 
 The result: higher code quality, lower token costs, and a predictable workflow that mirrors how a real engineering team operates.
 
+## The Evolution: Before and Now
+
+Most AI coding tools follow one of two patterns. This pipeline introduces a third.
+
+### Stage 1: The All-in-One Agent
+
+A single agent handles everything -- planning, coding, testing, reviewing, and committing -- in one long conversation.
+
+```mermaid
+flowchart TD
+    A[User Request]
+    B["SINGLE AGENT<br/>(Opus / Sonnet)<br/>Plans, explores, codes, tests,<br/>reviews, formats, commits...<br/>all in one context window"]
+    C["Done (hopefully)"]
+
+    A --> B --> C
+```
+
+**How it works:** The user describes a task. The agent thinks, writes code, runs tests, fixes failures, and commits -- all in a single thread. Every tool call (Claude Code, Cursor, default OpenCode, Copilot agent mode) typically works this way.
+
+**The problems:**
+- **Context bloat** -- the agent accumulates everything (exploration output, failed attempts, test logs) in one growing context, burning tokens on stale information
+- **No separation of concerns** -- the same agent that writes code also reviews it (self-review catches less)
+- **No cost control** -- expensive frontier models are used for mechanical tasks (formatting, git commits) that don't need them
+- **Unpredictable workflow** -- the agent decides what to do next with no enforced structure
+
+### Stage 2: The Two-Agent Split
+
+A planner agent designs the approach, then a builder agent implements it.
+
+```mermaid
+flowchart TD
+    A[User Request]
+    B["PLANNER<br/>(Opus)<br/>Explores codebase, designs approach,<br/>creates implementation plan"]
+    C[Plan passed down]
+    D["BUILDER<br/>(Opus)<br/>Writes code, tests, formats, reviews,<br/>commits -- everything else"]
+    E[Done]
+
+    A --> B --> C --> D --> E
+```
+
+**How it works:** The first agent focuses purely on understanding the problem and designing a solution. Its plan is passed to a second agent that handles all implementation. This is the pattern used by some multi-file editing tools and "plan then execute" workflows.
+
+**The improvements:**
+- Planning and implementation are decoupled -- the builder gets a clear plan instead of figuring it out while coding
+- Context is somewhat compressed between agents -- the builder doesn't see raw exploration output
+
+**The remaining problems:**
+- **The builder is still an all-in-one** -- it codes, tests, reviews, formats, and commits in a single agent
+- **Still no independent review** -- the same agent that writes code judges its own quality
+- **No model tiering** -- both agents use the same expensive model, even for mechanical tasks
+- **No structured remediation** -- if tests fail, there's no enforced loop, just the builder trying again
+
+### Stage 3: The 6-Agent Pipeline (This System)
+
+Six specialized agents, each with a focused role, enforced ordering, model tiering, and structured remediation loops.
+
+```mermaid
+flowchart TD
+    A[User Request]
+    B["CAPTAIN<br/>(Opus)<br/>Classifies, delegates, compresses<br/>context between every step"]
+
+    A --> B
+
+    B --> C["ARCHITECT<br/>(Opus)<br/>plan"]
+    C --> D["ENGINEER<br/>(Opus)<br/>code"]
+    D --> E["FORGE<br/>(Sonnet)<br/>test"]
+    E --> F["INSPECTOR<br/>(Sonnet)<br/>review"]
+    F --> G["SHIPPER<br/>(Mini)<br/>commit"]
+```
+
+**What changed:**
+- **Every concern is separated** -- planning, coding, testing, reviewing, and shipping each have a dedicated agent
+- **Independent review** -- the Inspector never sees the Engineer's reasoning, only the code diff
+- **Model tiering** -- validation and shipping use cheaper models; only reasoning-heavy tasks use Opus
+- **Structured remediation** -- test failures route back to the Engineer, not handled ad-hoc by whoever is running
+- **Context compression** -- the Captain compresses output between every step, preventing context snowball
+- **Budget guardrails** -- hard caps on invocations prevent runaway retry loops
+
+### Side-by-Side Comparison
+
+| | All-in-One | Two-Agent | 6-Agent Pipeline |
+|---|---|---|---|
+| **Agents** | 1 | 2 | 6 |
+| **Separation of concerns** | None | Plan vs Build | Full (plan, code, test, review, ship) |
+| **Independent review** | No (self-review) | No (self-review) | Yes (Inspector is separate) |
+| **Model tiering** | No | No | Yes (3 tiers) |
+| **Context management** | Grows unbounded | Split once | Compressed at every step |
+| **Remediation loops** | Ad-hoc | Ad-hoc | Structured (max 2 cycles) |
+| **Cost control** | None | None | Budget guardrails per task |
+| **Workflow predictability** | Low | Medium | High (enforced pipeline) |
+
+
 ## The Agent Roster
 
 | Agent | Role | Model Tier | Cost |

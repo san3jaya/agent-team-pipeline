@@ -66,17 +66,17 @@ Six specialized agents, each with a focused role, enforced ordering, model tieri
 graph TD
     UserRequest([User Request]) --> Captain
 
-    Captain["**CAPTAIN**<br/>(Opus)<br/>Classifies, delegates, compresses<br/>context between every step"]
+    Captain["<b>CAPTAIN</b><br/>(Opus)<br/>Classifies, delegates, compresses<br/>context between every step"]
 
     Captain --> Architect
     
     subgraph Execution_Pipeline [" "]
         direction LR
-        Architect["**ARCHITECT**<br/>(Opus)<br/>plan"] --> UserApproval["**[USER APPROVAL]**<br/>approve/adjust"]
-        UserApproval --> Engineer["**ENGINEER**<br/>(Opus)<br/>code"]
-        Engineer --> Forge["**FORGE**<br/>(Sonnet)<br/>test"]
-        Forge --> Inspector["**INSPECTOR**<br/>(Sonnet)<br/>review"]
-        Inspector --> Shipper["**SHIPPER**<br/>(Mini)<br/>commit"]
+        Architect["<b>ARCHITECT</b><br/>(Opus)<br/>plan"] --> UserApproval["**[USER APPROVAL]**<br/>approve/adjust"]
+        UserApproval --> Engineer["<b>ENGINEER</b><br/>(Opus)<br/>code"]
+        Engineer --> Forge["<b>FORGE</b><br/>(Sonnet)<br/>test"]
+        Forge --> Inspector["<b>INSPECTOR</b><br/>(Sonnet)<br/>review"]
+        Inspector --> Shipper["<b>SHIPPER</b><br/>(Mini)<br/>commit"]
     end
 ```
 
@@ -281,19 +281,19 @@ graph TD
     UserRequest([User Request]) --> Captain
 
     subgraph " "
-    Captain["**CAPTAIN**<br/>(Opus)<br/>Classifies task, orchestrates pipeline,<br/>compresses context between steps"]
+    Captain["<b>CAPTAIN</b><br/>(Opus)<br/>Classifies task, orchestrates pipeline,<br/>compresses context between steps"]
     
-    Architect["**ARCHITECT**<br/>(Opus)<br/>Explore codebase, analyze requirements,<br/>design architecture (conditional depth)"]
+    Architect["<b>ARCHITECT</b><br/>(Opus)<br/>Explore codebase, analyze requirements,<br/>design architecture (conditional depth)"]
     
-    Gate["**APPROVAL GATE**<br/>(user decides)<br/>Captain presents plan to user.<br/>Approve / Adjust / Reject"]
+    Gate["<b>APPROVAL GATE</b><br/>(user decides)<br/>Captain presents plan to user.<br/>Approve / Adjust / Reject"]
     
-    Engineer["**ENGINEER**<br/>(Opus)<br/>Write/edit code, update docs<br/>-- also handles remediation fixes"]
+    Engineer["<b>ENGINEER</b><br/>(Opus)<br/>Write/edit code, update docs<br/>-- also handles remediation fixes"]
     
-    Forge["**FORGE**<br/>(Sonnet)<br/>Format, build, test, fix test files<br/>-- loops back to engineer on failure"]
+    Forge["<b>FORGE</b><br/>(Sonnet)<br/>Format, build, test, fix test files<br/>-- loops back to engineer on failure"]
     
-    Inspector["**INSPECTOR**<br/>(Sonnet)<br/>Code quality + OWASP security audit<br/>-- critical/high findings loop back"]
+    Inspector["<b>INSPECTOR</b><br/>(Sonnet)<br/>Code quality + OWASP security audit<br/>-- critical/high findings loop back"]
     
-    Shipper["**SHIPPER**<br/>(GPT-5 Mini)<br/>Commit, push, CI analysis"]
+    Shipper["<b>SHIPPER</b><br/>(GPT-5 Mini)<br/>Commit, push, CI analysis"]
     end
 
     Captain -- "Simple / Standard / Complex" --> Architect

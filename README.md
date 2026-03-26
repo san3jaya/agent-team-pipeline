@@ -72,7 +72,7 @@ graph TD
     
     subgraph Execution_Pipeline [" "]
         direction LR
-        Architect["<b>ARCHITECT</b><br/>(Opus)<br/>plan"] --> UserApproval["**[USER APPROVAL]**<br/>approve/adjust"]
+        Architect["<b>ARCHITECT</b><br/>(Opus)<br/>plan"] --> UserApproval["<b>USER APPROVAL</b><br/>approve/adjust"]
         UserApproval --> Engineer["<b>ENGINEER</b><br/>(Opus)<br/>code"]
         Engineer --> Forge["<b>FORGE</b><br/>(Sonnet)<br/>test"]
         Forge --> Inspector["<b>INSPECTOR</b><br/>(Sonnet)<br/>review"]

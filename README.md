@@ -63,21 +63,24 @@ flowchart TD
 Six specialized agents, each with a focused role, enforced ordering, model tiering, and structured remediation loops.
 
 ```mermaid
-graph TD
-    UserRequest([User Request]) --> Captain
-
-    Captain["<b>CAPTAIN</b><br/>(Opus)<br/>Classifies, delegates, compresses<br/>context between every step"]
-
+graph TB
+ subgraph Execution_Pipeline[" "]
+    direction LR
+        UserApproval["<b>USER APPROVAL</b><br>approve/adjust"]
+        Architect["<b>ARCHITECT</b><br>(Opus)<br>plan"]
+        Engineer["<b>ENGINEER</b><br>(Opus)<br>code"]
+        Forge["<b>FORGE</b><br>(Sonnet)<br>test"]
+        Inspector["<b>INSPECTOR</b><br>(Sonnet)<br>review"]
+        Shipper["<b>SHIPPER</b><br>(Mini)<br>commit"]
+  end
+    UserRequest(["User Request"]) --> Captain["<b>CAPTAIN</b><br>(Opus)<br>Classifies, delegates, compresses<br>context between every step"]
     Captain --> Architect
-    
-    subgraph Execution_Pipeline [" "]
-        direction LR
-        Architect["<b>ARCHITECT</b><br/>(Opus)<br/>plan"] --> UserApproval["<b>USER APPROVAL</b><br/>approve/adjust"]
-        UserApproval --> Engineer["<b>ENGINEER</b><br/>(Opus)<br/>code"]
-        Engineer --> Forge["<b>FORGE</b><br/>(Sonnet)<br/>test"]
-        Forge --> Inspector["<b>INSPECTOR</b><br/>(Sonnet)<br/>review"]
-        Inspector --> Shipper["<b>SHIPPER</b><br/>(Mini)<br/>commit"]
-    end
+    Architect --> UserApproval
+    UserApproval --> Engineer
+    Engineer --> Forge
+    Forge --> Inspector
+    Inspector --> Shipper
+    Captain --> UserApproval
 ```
 
 **What changed:**

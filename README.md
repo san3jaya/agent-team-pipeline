@@ -90,6 +90,7 @@ flowchart TD
 |---|---|---|---|
 | **Agents** | 1 | 2 | 6 |
 | **Separation of concerns** | None | Plan vs Build | Full (plan, code, test, review, ship) |
+| **User approval gate** | No | No | Yes (after plan, before code) |
 | **Independent review** | No (self-review) | No (self-review) | Yes (Inspector is separate) |
 | **Model tiering** | No | No | Yes (3 tiers) |
 | **Context management** | Grows unbounded | Split once | Compressed at every step |
@@ -118,6 +119,7 @@ Every task flows through a strict sequential pipeline. The Captain never skips a
 
 ```
 1. PLAN+EXPLORE  -> Architect       Understand the problem, explore code, design solution
+── USER APPROVAL GATE ──            Present plan to user, wait for approval
 2. IMPLEMENT     -> Engineer        Write the code following the plan
 3. BUILD+TEST    -> Forge           Format, build, run tests, fix test files
 4. REVIEW        -> Inspector       Quality + security audit
@@ -125,6 +127,8 @@ Every task flows through a strict sequential pipeline. The Captain never skips a
 ```
 
 Tasks are classified into 4 tiers (trivial, simple, standard, complex), and the pipeline adapts -- trivial tasks skip planning entirely, simple tasks skip review, etc.
+
+After the Architect delivers its plan, the Captain **always presents the plan to the user for approval** before any code is written. The user can approve, adjust, or reject. This prevents wasted tokens on wrong implementations and keeps the user in control of architectural decisions.
 
 When tests fail or the reviewer finds critical issues, a **remediation loop** kicks in: failures route back to the Engineer for fixes, then re-run validation. The Captain never fixes code itself -- it purely orchestrates.
 
@@ -357,10 +361,11 @@ Once installed, just use OpenCode normally. The Captain handles everything:
 
 # Captain classifies the task (standard), then:
 # 1. Invokes Architect to explore codebase and design the approach
-# 2. Invokes Engineer to write the code
-# 3. Invokes Forge to format, build, and test
-# 4. Invokes Inspector for quality + security audit
-# 5. Invokes Shipper to commit (if requested)
+# 2. Presents the plan to you for approval
+# 3. Invokes Engineer to write the code
+# 4. Invokes Forge to format, build, and test
+# 5. Invokes Inspector for quality + security audit
+# 6. Invokes Shipper to commit (if requested)
 # -> Final report with efficiency summary
 ```
 
@@ -392,6 +397,7 @@ The Captain handles the edit directly (no Architect or Engineer needed), but sti
 
 - **You talk to the Captain only.** The 5 subagents are hidden from the `@` autocomplete -- they're invoked automatically.
 - **The Captain will ask clarifying questions** if your request is vague or has trade-offs. Max 3 questions, framed as choices.
+- **After planning, you approve the plan.** The Captain presents the Architect's plan (classification, files, steps, risks) and waits for your approval before writing any code. You can approve, adjust, or reject.
 - **If something fails**, the Captain retries or routes to the Engineer for fixes. It will never silently swallow errors.
 - **The final report** tells you exactly what happened: steps run, steps skipped, issues found, invocation count, and efficiency breakdown.
 

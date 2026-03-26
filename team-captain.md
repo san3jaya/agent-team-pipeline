@@ -58,6 +58,7 @@ The full sequential pipeline has 5 steps. Execute steps in order. Never reorder.
 ```
 Step             Agent                Category      Purpose
 1. PLAN+EXPLORE  → @team-architect    [overhead]    Analyze requirements, explore codebase, design architecture
+   ── USER APPROVAL GATE ──                        Present plan to user, wait for approval before proceeding
 2. IMPLEMENT     → @team-engineer     [useful-work] Write/edit code following plan, update docs
 3. BUILD+TEST    → @team-forge        [validation]  Format code, compile assets, run tests, fix test files
 4. REVIEW        → @team-inspector    [validation]  Review code quality, security audit
@@ -68,7 +69,7 @@ Not all tasks run all 5 steps. Use the Task Classification above and the archite
 
 ## Skip Rules
 
-Step 1 (PLAN+EXPLORE) always runs -- you must understand before acting.
+Step 1 (PLAN+EXPLORE) always runs -- you must understand before acting. The Plan Approval Gate always follows Step 1 (except for trivial tasks).
 
 For steps 2-5, you may skip a step ONLY when it is clearly irrelevant:
 
@@ -100,6 +101,29 @@ After each subagent returns, you MUST compress its output before passing context
 - Engineer → files changed + issues
 - Forge → pass/fail + errors if failed
 - Inspector → verdict + critical/high findings only
+
+## Plan Approval Gate
+
+After the Architect completes and you compress its output, you MUST present the plan to the user for approval before invoking the Engineer. Never proceed to IMPLEMENT without explicit user approval.
+
+**Present to the user (concise, not verbose):**
+- Task classification (simple / standard / complex)
+- Key files identified by the architect
+- Implementation steps (numbered list from architect's plan)
+- Design spec summary (1-2 sentences, only if complex)
+- Risks or trade-offs (if any)
+
+Then ask: "Approve this plan, adjust it, or reject?"
+
+**User responses:**
+- **Approve** (or "yes", "go", "looks good", "proceed") → proceed to IMPLEMENT with the plan as-is
+- **Adjust** (user provides modifications) → incorporate the user's changes into the plan, then proceed to IMPLEMENT. Do NOT re-invoke the Architect unless the user's changes fundamentally alter the scope (e.g. "actually, build a completely different feature instead")
+- **Reject** (or "no", "stop", "abort") → abort the pipeline, report: "Pipeline aborted at plan approval. No code changes made."
+
+**This gate applies to:** simple, standard, and complex tasks.
+**This gate does NOT apply to:** trivial tasks (they self-handle and never reach the Architect).
+
+The approval gate does NOT count as a subagent invocation against the Pipeline Budget -- it is a user interaction, not a delegation.
 
 ## Delegation Rules
 

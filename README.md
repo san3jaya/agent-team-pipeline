@@ -63,17 +63,21 @@ flowchart TD
 Six specialized agents, each with a focused role, enforced ordering, model tiering, and structured remediation loops.
 
 ```mermaid
-flowchart TD
-    A[User Request]
-    B["CAPTAIN<br/>(Opus)<br/>Classifies, delegates, compresses<br/>context between every step"]
+graph TD
+    UserRequest([User Request]) --> Captain
 
-    A --> B
+    Captain["**CAPTAIN**<br/>(Opus)<br/>Classifies, delegates, compresses<br/>context between every step"]
 
-    B --> C["ARCHITECT<br/>(Opus)<br/>plan"]
-    C --> D["ENGINEER<br/>(Opus)<br/>code"]
-    D --> E["FORGE<br/>(Sonnet)<br/>test"]
-    E --> F["INSPECTOR<br/>(Sonnet)<br/>review"]
-    F --> G["SHIPPER<br/>(Mini)<br/>commit"]
+    Captain --> Architect
+    
+    subgraph Execution_Pipeline [" "]
+        direction LR
+        Architect["**ARCHITECT**<br/>(Opus)<br/>plan"] --> UserApproval["**[USER APPROVAL]**<br/>approve/adjust"]
+        UserApproval --> Engineer["**ENGINEER**<br/>(Opus)<br/>code"]
+        Engineer --> Forge["**FORGE**<br/>(Sonnet)<br/>test"]
+        Forge --> Inspector["**INSPECTOR**<br/>(Sonnet)<br/>review"]
+        Inspector --> Shipper["**SHIPPER**<br/>(Mini)<br/>commit"]
+    end
 ```
 
 **What changed:**
@@ -273,27 +277,35 @@ For longer tasks, the Captain maintains a `.opencode/resume.md` checkpoint file.
 ## Architecture Overview
 
 ```mermaid
-flowchart TD
-    A[User Request] --> B["CAPTAIN (Opus)"]
+graph TD
+    UserRequest([User Request]) --> Captain
 
-    B --> C{Task Type}
+    subgraph " "
+    Captain["**CAPTAIN**<br/>(Opus)<br/>Classifies task, orchestrates pipeline,<br/>compresses context between steps"]
+    
+    Architect["**ARCHITECT**<br/>(Opus)<br/>Explore codebase, analyze requirements,<br/>design architecture (conditional depth)"]
+    
+    Gate["**APPROVAL GATE**<br/>(user decides)<br/>Captain presents plan to user.<br/>Approve / Adjust / Reject"]
+    
+    Engineer["**ENGINEER**<br/>(Opus)<br/>Write/edit code, update docs<br/>-- also handles remediation fixes"]
+    
+    Forge["**FORGE**<br/>(Sonnet)<br/>Format, build, test, fix test files<br/>-- loops back to engineer on failure"]
+    
+    Inspector["**INSPECTOR**<br/>(Sonnet)<br/>Code quality + OWASP security audit<br/>-- critical/high findings loop back"]
+    
+    Shipper["**SHIPPER**<br/>(GPT-5 Mini)<br/>Commit, push, CI analysis"]
+    end
 
-    C -- Yes --> F["ENGINEER (Opus)"]
-
-    C -- No --> D["ARCHITECT (Opus)"]
-    D --> F["ENGINEER (Opus)"]
-
-    F --> G["FORGE (Sonnet)"]
-
-    G --> H{Tests Pass?}
-    H -- Yes --> F
-    H -- No --> I["INSPECTOR (Sonnet)"]
-
-    I --> J{Critical Issues?}
-    J -- Yes --> F
-    J -- No --> K["SHIPPER (GPT-5 Mini)"]
-
-    K --> L[Final Report + Efficiency Summary]
+    Captain -- "Simple / Standard / Complex" --> Architect
+    Captain -- "Trivial (self-handle)" --> Forge
+    
+    Architect --> Gate
+    Gate --> Engineer
+    Engineer --> Forge
+    Forge --> Inspector
+    Inspector --> Shipper
+    
+    Shipper --> Report([Final Report + Efficiency Summary])
 ```
 
 ## How to Use
